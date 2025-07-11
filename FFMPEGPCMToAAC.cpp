@@ -25,7 +25,7 @@ int main(int argc, char** argv){
 		// 16kHz => 16k samples per second
 		// Send 1s of audio to encoder at a time
 		// Create encoder that writes to an aac file
-		AudioEncoder encoder(outputFile);
+		AudioEncoder encoder(outputFile, true, true);
 		for (int i = 0; i < pcm_data.size(); i += 16000) {
 			int num_samples = std::min(16000, static_cast<int>(pcm_data.size() - i));
 			if (num_samples <= 0) {

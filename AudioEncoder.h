@@ -19,8 +19,8 @@ extern "C" {
 
 class AudioEncoder {
 public:
-    AudioEncoder(const std::string& outPath, bool _alwaysWriteToDisk = true) {
-		alwaysWriteToDisk = _alwaysWriteToDisk;
+    AudioEncoder(const std::string& outPath, bool _alwaysWriteToDisk = false, bool _printProgress = false)
+    : alwaysWriteToDisk(_alwaysWriteToDisk), printProgress(_printProgress){
 		initEncoder(outPath);
 		// Create and start the encoding thread
 		encoderThread = std::thread(&AudioEncoder::encodeLoop, this);
@@ -76,6 +76,8 @@ private:
     int64_t pts = 0;
 
     bool alwaysWriteToDisk = true;
+    bool printProgress = true;
+    uint32_t numSamplesEncoded = 0;
 
 	// Main encoding loop which reads samples from the queue
     void encodeLoop() {
@@ -127,10 +129,21 @@ private:
                 encodeFrame(frame);
 
                 offset += frameSize;
+				numSamplesEncoded += frameSize;
             }
 
 
+
+            if (printProgress) {
+                int percentComplete = ((float)numSamplesEncoded / (float)(numSamplesEncoded + sampleQueue.size()) * 100) / 1;
+                if (percentComplete % 5 == 0) {
+                    std::cout << "Encoded " << numSamplesEncoded << " samples out of " << numSamplesEncoded + sampleQueue.size() << ": " << percentComplete << "% Complete\r";
+                }
+            }
+
         }
+
+        if (printProgress) { std::cout << '\n'; }
 
         // Flush encoder
         encodeFrame(nullptr);
